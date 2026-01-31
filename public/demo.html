@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>LexOps Insight | Demonstração</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid #1e293b;
+      background: #020617;
+    }
+
+    header img {
+      height: 42px;
+    }
+
+    nav button {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #e5e7eb;
+      padding: 10px 14px;
+      margin-left: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    nav button:hover {
+      background: #1e293b;
+    }
+
+    iframe {
+      width: 100%;
+      height: calc(100vh - 82px);
+      border: none;
+      background: #f9fafb;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <!-- LOGO -->
+  <img src="/assets/img/logo-lexops.png" alt="LexOps Insight">
+
+  <!-- MENU -->
+  <nav>
+    <button onclick="loadDemo('geral')">Geral</button>
+    <button onclick="loadDemo('executivo')">Executivo</button>
+    <button onclick="loadDemo('trabalhista')">Trabalhista</button>
+    <button onclick="loadDemo('multicliente')">Multicliente</button>
+  </nav>
+</header>
+
+<!-- ÁREA DA DEMO -->
+<iframe id="demoFrame" src="/demo/geral.html"></iframe>
+
+<script>
+  function loadDemo(tipo) {
+    document.getElementById('demoFrame').src = `/demo/${tipo}.html`;
+  }
+</script>
+
+</body>
+</html>
