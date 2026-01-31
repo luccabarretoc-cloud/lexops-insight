@@ -1,134 +1,1163 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Jurídico | LexOpsInsight (DEMO)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Jurídico | LexOpsInsight (DEMO)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script id="consolidated-data" type="application/json"></script>
 
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: { sans: ['Inter','system-ui','sans-serif'] }
-    }
-  }
-}
-</script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: { 500: 'var(--brand-500)', 600: 'var(--brand-600)' }
+                    }
+                }
+            }
+        }
+    </script>
 
-<style>
-:root{
-  --brand-500:#4f46e5;
-  --brand-600:#4338ca;
-  --layout-bg:#F9FAFB;
-  --layout-card:#ffffff;
-  --layout-text:#111827;
-  --layout-border:#E5E7EB;
-  --layout-accent:#F3F4F6;
-  --layout-sidebar:#0f172a;
-  --layout-sidebar-text:#f8fafc;
-  --layout-sidebar-border:#1e293b;
-}
-body{background:var(--layout-bg);color:var(--layout-text);overflow:hidden}
-.glass{background:var(--layout-card);border:1px solid var(--layout-border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.glass-dark{background:var(--layout-sidebar);border-right:1px solid var(--layout-sidebar-border);color:var(--layout-sidebar-text)}
-.card{transition:.2s;border-radius:14px}
-.card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
-.brand-header{
-  height:9rem;
-  background:var(--layout-card);
-  border-bottom:1px solid var(--layout-border);
-  display:flex;
-  align-items:center;
-  padding:0 1.5rem;
-  position:relative;
-  z-index:40;
-  justify-content:space-between
-}
-.header-section{flex:1;display:flex;align-items:center;height:100%}
-.header-left{justify-content:flex-end;padding-right:1rem}
-.header-right{justify-content:flex-start;padding-left:1rem}
-.header-center{
-  flex:0 0 380px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  border-left:1px solid var(--layout-border);
-  border-right:1px solid var(--layout-border);
-  height:70%
-}
-.header-center h1{
-  font-size:1.5rem;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:-.04em
-}
-.logo-upload{max-height:80px;max-width:340px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))}
-.logo-placeholder{
-  border:2px dashed var(--layout-border);
-  border-radius:10px;
-  padding:1rem 2.5rem;
-  font-size:.7rem;
-  color:#9CA3AF;
-  font-weight:700;
-  cursor:pointer
-}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
-</style>
+    <style>
+        :root { 
+            --brand-500: #4f46e5; 
+            --brand-600: #4338ca;
+            --layout-bg: #F9FAFB;
+            --layout-card: #ffffff;
+            --layout-text: #111827;
+            --layout-border: #E5E7EB;
+            --layout-accent: #F3F4F6;
+            --layout-sidebar: #0f172a;
+            --layout-sidebar-text: #f8fafc;
+            --layout-sidebar-border: #1e293b;
+        }
+        
+        body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; }
+        
+        .glass { 
+            background: var(--layout-card); 
+            border: 1px solid var(--layout-border); 
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03); 
+        }
+        .glass-dark { 
+            background: var(--layout-sidebar); 
+            border-right: 1px solid var(--layout-sidebar-border); 
+            color: var(--layout-sidebar-text); 
+        }
+        .card { transition: all 0.2s; border-radius: 12px; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.08); }
+        .modal-overlay { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(4px); }
+        
+        .brand-header {
+            height: 9rem; 
+            background: var(--layout-card);
+            border-bottom: 1px solid var(--layout-border);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 40;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .header-section { flex: 1; display: flex; align-items: center; height: 100%; }
+        .header-left { justify-content: flex-end; gap: 0; padding-right: 1rem; }
+        .header-right { justify-content: flex-start; gap: 0; padding-left: 1rem; }
+        
+        .header-center { 
+            flex: 0 0 380px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            border-left: 1px solid var(--layout-border); 
+            border-right: 1px solid var(--layout-border); 
+            height: 70%;
+            padding: 0 1rem;
+        }
+
+        .logo-upload { 
+            max-height: 8.5rem; 
+            width: auto; 
+            max-width: 340px; 
+            object-fit: contain; 
+            mix-blend-mode: multiply; 
+            transition: transform 0.3s; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+        }
+        .logo-upload:hover { transform: scale(1.02); }
+
+        .logo-placeholder { 
+            border: 2px dashed var(--layout-border); 
+            border-radius: 8px; 
+            padding: 1.2rem 2.5rem; 
+            text-align: center; 
+            opacity: 0.5; 
+            font-size: 0.75rem; 
+            color: #9CA3AF; 
+            font-weight: 600; 
+            cursor: pointer; 
+        }
+
+        .header-center h1 { 
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            color: var(--layout-text); 
+            letter-spacing: -0.04em; 
+            white-space: nowrap; 
+            line-height: 1; 
+        }
+        .header-center p { 
+            font-size: 0.7rem; 
+            font-style: italic; 
+            color: #9CA3AF; 
+            margin-top: 0.4rem; 
+            font-family: 'Inter', serif; 
+            font-weight: 500; 
+        }
+
+        .lexops-logo-admin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1.5rem;
+            background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a855f7 100%);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            min-height: 130px;
+        }
+
+        .lexops-logo-admin::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .lexops-logo-admin img {
+            max-width: 280px;
+            max-height: 80px;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4)) brightness(1.15);
+            transition: transform 0.3s ease;
+        }
+
+        .lexops-logo-admin img:hover {
+            transform: scale(1.05);
+        }
+
+        .lexops-logo-fallback {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            z-index: 2;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.5); border-radius: 3px; }
+        .preview-box { font-size: 10px; color: #64748b; background: #f8fafc; padding: 6px; border-radius: 6px; border: 1px dashed #e2e8f0; margin-top: 6px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .admin-section-title {
+            color: var(--layout-sidebar-text);
+            opacity: 0.6;
+        }
+        
+        .admin-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--layout-sidebar-text);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .admin-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .admin-select {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--layout-sidebar-text);
+        }
+        
+        .admin-checkbox {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        body.client-mode .admin-panel { display: none !important; }
+        body.client-mode .logo-placeholder { display: none !important; }
+        body.client-mode .client-controls { display: flex !important; }
+        
+        #pageLoader { position: fixed; inset: 0; background: var(--layout-bg); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--brand-500); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media print {
+            .no-print, .admin-panel, .client-controls, #emptyState { display: none !important; }
+            main { margin: 0 !important; width: 100% !important; overflow: visible !important; }
+            .glass { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
+            #dashboardBody { padding: 0 !important; }
+            #dashContent { display: block !important; }
+            .brand-header { border-bottom: 2px solid #000; margin-bottom: 20px; height: auto; padding: 20px 0; }
+        }
+    </style>
 </head>
+<body class="flex h-screen font-sans text-sm">
 
-<body class="flex h-screen text-sm">
+    <div id="pageLoader"><div class="spinner"></div></div>
 
-<aside class="w-80 glass-dark flex flex-col shrink-0 shadow-2xl">
-  <div class="flex-1 overflow-y-auto p-5 space-y-8">
-    <!-- SIDEBAR LIMPA – SEM BRANDING -->
-  </div>
-</aside>
+    <aside id="adminPanel" class="admin-panel w-80 glass-dark flex flex-col z-50 shrink-0 shadow-2xl transition-all">
+        <div class="lexops-logo-admin" style="display: none;">
+            <img id="lexopsLogoImg" src="" alt="LexOps Insight" class="hidden">
+            <div id="lexopsLogoFallback" class="lexops-logo-fallback">LEXOPS</div>
+        </div>
 
-<main class="flex-1 flex flex-col h-full">
+        <div class="flex-1 overflow-y-auto p-5 space-y-8">
+            <section class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-database mr-2"></i> Configuração</h3>
+                <div class="space-y-2">
+                    <button onclick="demoBlockAction('Importação')" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button">
+                        <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> Importar Base
+                    </button>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="document.getElementById('logoClient').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-building mr-1"></i> Logo Cliente</button>
+                    <button onclick="document.getElementById('logoOffice').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-briefcase mr-1"></i> Logo Escritório</button>
+                </div>
+                <input type="file" id="logoOffice" accept="image/*" class="hidden">
+                <input type="file" id="logoClient" accept="image/*" class="hidden">
+            </section>
 
-<header class="brand-header shrink-0 shadow-sm relative">
+            <section class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-paint-brush mr-2"></i> Aparência</h3>
+                
+                <div class="p-3 rounded-lg space-y-3 border admin-button" style="border-color: rgba(255,255,255,0.1)">
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Paleta de Gráficos</label>
+                        <select id="paletteSelect" onchange="updatePalette(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select">
+                            <option value="indigo">LexOps Classic (Indigo)</option>
+                            <option value="ocean">Oceanic Blue (Teal)</option>
+                            <option value="sunset">Executive Sunset (Orange)</option>
+                            <option value="forest">Corporate Forest (Green)</option>
+                            <option value="night">Night Vision (Purple)</option>
+                            <option value="rose">High Alert (Red)</option>
+                            <option value="gold">Golden Premium (Gold)</option>
+                            <option value="slate">Corporate Slate (Gray)</option>
+                            <option value="emerald">Professional Emerald (Green)</option>
+                            <option value="crimson">Power Crimson (Red/Pink)</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-[10px] font-medium admin-section-title">Cor Personalizada</span>
+                        <div class="h-6 w-6 rounded-full border overflow-hidden relative cursor-pointer hover:border-white" style="border-color: rgba(255,255,255,0.3)">
+                            <input type="color" onchange="updateCustomColor(this.value)" class="absolute -top-2 -left-2 w-10 h-10 cursor-pointer">
+                        </div>
+                    </div>
+                </div>
 
-  <div class="absolute left-6 top-5 flex flex-col gap-0.5">
-    <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">
-      Powered by LexOps Insight
-    </span>
-    <span class="text-[9px] uppercase tracking-wider text-indigo-500 font-bold">
-      Demo Version
-    </span>
-  </div>
+                <div class="p-3 rounded-lg space-y-3 border admin-button" style="border-color: rgba(255,255,255,0.1)">
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Tema do Layout</label>
+                        <select id="layoutThemeSelect" onchange="updateLayoutTheme(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select">
+                            <option value="minimal">Minimal White</option>
+                            <option value="slate">Professional Slate</option>
+                            <option value="midnight">Midnight Dark</option>
+                            <option value="cream">Warm Cream</option>
+                            <option value="ocean">Ocean Blue</option>
+                            <option value="forest">Forest Green</option>
+                            <option value="lavender">Soft Lavender</option>
+                            <option value="ink">Corporate Ink</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button onclick="resetLayout()" class="w-full py-2 rounded-lg text-xs font-bold border transition-all admin-button">
+                    <i class="fas fa-undo mr-2"></i> Restaurar Padrão
+                </button>
+            </section>
 
-  <div class="header-section header-left">
-    <div id="phOffice" class="logo-placeholder" onclick="document.getElementById('logoOffice').click()">Logo Escritório</div>
-    <img id="imgOffice" src="" class="logo-upload hidden" alt="Logo Escritório">
-  </div>
+            <section class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-chart-line mr-2"></i> Criar Gráfico Personalizado</h3>
+                <div class="p-3 rounded-lg space-y-3 border admin-button" style="border-color: rgba(255,255,255,0.1)">
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Eixo X (Dimensão)</label>
+                        <select id="biX" class="w-full border text-xs rounded p-2 outline-none admin-select"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Eixo Y (Métrica)</label>
+                        <select id="biY" onchange="toggleYCol()" class="w-full border text-xs rounded p-2 outline-none admin-select">
+                            <option value="count">Contagem (Quantidade)</option>
+                            <option value="sum">Soma</option>
+                            <option value="avg">Média</option>
+                        </select>
+                    </div>
+                    <div id="biYColDiv" class="space-y-1 hidden">
+                        <label class="text-[10px] block font-medium admin-section-title">Coluna para Cálculo</label>
+                        <select id="biYCol" class="w-full border text-xs rounded p-2 outline-none admin-select"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Tipo de Gráfico</label>
+                        <select id="biType" class="w-full border text-xs rounded p-2 outline-none admin-select">
+                            <option value="bar">Barras Vertical</option>
+                            <option value="bar_h">Barras Horizontal</option>
+                            <option value="line">Linha</option>
+                            <option value="doughnut">Rosca (Doughnut)</option>
+                            <option value="pie">Pizza (Pie)</option>
+                            <option value="polarArea">Área Polar</option>
+                            <option value="radar">Radar</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] block font-medium admin-section-title">Título do Gráfico</label>
+                        <input type="text" id="biTitle" placeholder="Ex: Análise de Valores por Área" class="w-full border text-xs rounded p-2 outline-none admin-select">
+                    </div>
+                    <button onclick="addChart()" class="w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-all" style="background: var(--brand-500); color: white;">
+                        <i class="fas fa-plus-circle"></i> Adicionar Gráfico
+                    </button>
+                </div>
+            </section>
 
-  <div class="header-center">
-    <img src="/assets/img/logo-lexops.png"
-         alt="LexOps Insight"
-         style="max-height:72px;margin-bottom:10px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.15));">
-    <h1>Análise Jurídica Corporativa</h1>
-  </div>
+            <section class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-filter mr-2"></i> Filtros de Dados</h3>
+                <div id="filtersContainer" class="space-y-4 max-h-60 overflow-y-auto pr-1"></div>
+            </section>
+        </div>
 
-  <div class="header-section header-right">
-    <img id="imgClient" src="" class="logo-upload hidden" alt="Logo Cliente">
-    <div id="phClient" class="logo-placeholder" onclick="document.getElementById('logoClient').click()">Logo Cliente</div>
-  </div>
+        <div class="p-4 border-t space-y-2" style="background: var(--layout-sidebar); border-color: var(--layout-sidebar-border)">
+            <button onclick="demoBlockAction('Exportação PDF')" class="w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-md admin-button">
+                <i class="fas fa-print"></i> PDF
+            </button>
+            <button onclick="demoBlockAction('Exportação HTML')" class="w-full py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-all" style="background: #10b981; color: white; filter: grayscale(1);">
+                <i class="fas fa-share-alt"></i> Exportar HTML
+            </button>
+        </div>
+    </aside>
 
-</header>
+    <main class="flex-1 flex flex-col h-full relative">
+        <header class="brand-header shrink-0 shadow-sm">
+            
+            <div class="header-section header-left">
+                <div id="phOffice" class="logo-placeholder" onclick="document.getElementById('logoOffice').click()">Logo Escritório</div>
+                <img id="imgOffice" src="" class="logo-upload hidden" alt="Logo Escritório">
+            </div>
 
-<div class="flex-1 overflow-y-auto p-8">
-  <!-- TODO O CONTEÚDO, GRÁFICOS, FILTROS E FUNÇÕES PERMANECEM INALTERADOS -->
-</div>
+            <div class="header-center">
+                <h1>Análise Jurídica Corporativa</h1>
+                <p>powered by <span class="font-bold not-italic">LexOpsInsight</span></p>
+                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded mt-2 uppercase tracking-wide">Demo Version</span>
+            </div>
 
-</main>
+            <div class="header-section header-right">
+                <img id="imgClient" src="" class="logo-upload hidden" alt="Logo Cliente">
+                <div id="phClient" class="logo-placeholder" onclick="document.getElementById('logoClient').click()">Logo Cliente</div>
+            </div>
+        </header>
+
+        <div id="clientControls" class="client-controls hidden px-8 py-3 border-b items-center gap-4 z-30 shadow-sm no-print" style="background: var(--layout-card); border-color: var(--layout-border)">
+            <div class="relative shrink-0">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="globalSearch" placeholder="Pesquisar em tudo..." class="pl-9 pr-4 py-2.5 rounded-lg text-xs w-64 focus:ring-2 focus:ring-brand-500 outline-none transition-all font-medium placeholder:text-slate-400" style="background: var(--layout-accent); border: 1px solid var(--layout-border); color: var(--layout-text)" onkeyup="renderAll()">
+            </div>
+            <div class="h-6 w-px mx-2" style="background: var(--layout-border)"></div>
+            <div id="clientFilters" class="flex gap-2 flex-wrap flex-1 items-center pb-1"></div>
+            <button onclick="resetFilters()" class="text-xs text-rose-500 hover:text-rose-700 font-bold hover:underline whitespace-nowrap ml-2">
+                <i class="fas fa-undo mr-1"></i> Limpar Filtros
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8" id="dashboardBody" style="background: var(--layout-bg)">
+            <div id="emptyState" class="h-full flex flex-col items-center justify-center opacity-50">
+                <div class="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-file-contract text-4xl text-slate-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-600">Carregando Demo...</h3>
+                <p class="text-slate-400 mt-2 text-sm">Preparando ambiente de demonstração.</p>
+            </div>
+
+            <div id="dashContent" class="hidden space-y-8 pb-10">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 break-inside-avoid">
+                    <div class="glass p-6 rounded-2xl border-t-4 border-slate-400 card relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 p-4 text-slate-100 group-hover:text-slate-200 transition-colors"><i class="fas fa-folder text-6xl opacity-20 transform rotate-12"></i></div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-1 relative z-10" style="color: #6B7280">Volume Total</p>
+                        <h3 class="text-4xl font-black relative z-10" style="color: var(--layout-text)" id="kTotal">0</h3>
+                    </div>
+                    <div class="glass p-6 rounded-2xl border-t-4 card relative overflow-hidden group" style="border-color: var(--brand-500)">
+                        <div class="absolute right-0 top-0 p-4 text-slate-100 group-hover:text-slate-200 transition-colors"><i class="fas fa-coins text-6xl opacity-20 transform rotate-12"></i></div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-1 relative z-10" style="color: #6B7280">Exposição Total</p>
+                        <h3 class="text-4xl font-black text-brand-600 relative z-10" style="color: var(--brand-600)" id="kTotalVal">R$ 0</h3>
+                    </div>
+                    <div class="glass p-6 rounded-2xl border-t-4 border-rose-500 card relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 p-4 text-rose-100 group-hover:text-rose-200 transition-colors"><i class="fas fa-fire text-6xl opacity-20 transform rotate-12"></i></div>
+                        <p class="text-[10px] font-bold text-rose-500 uppercase tracking-wider mb-1 relative z-10">Risco Provável</p>
+                        <h3 class="text-4xl font-black relative z-10" style="color: var(--layout-text)" id="kRiskProv">R$ 0</h3>
+                    </div>
+                    <div class="glass p-6 rounded-2xl border-t-4 card relative overflow-hidden group" style="border-color: var(--brand-500)">
+                        <div class="absolute right-0 top-0 p-4 text-slate-100 group-hover:text-slate-200 transition-colors"><i class="fas fa-calculator text-6xl opacity-20 transform rotate-12"></i></div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider mb-1 relative z-10" style="color: #6B7280">Ticket Médio</p>
+                        <h3 class="text-4xl font-black relative z-10" style="color: var(--layout-text)" id="kAvg">R$ 0</h3>
+                    </div>
+                </div>
+
+                <div id="chartsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+
+                <div class="glass rounded-2xl overflow-hidden shadow-sm border break-before-page" style="border-color: var(--layout-border)">
+                    <div class="px-6 py-5 border-b flex justify-between items-center" style="border-color: var(--layout-border); background: var(--layout-accent)">
+                        <h4 class="font-bold text-xs uppercase tracking-wide flex items-center gap-2" style="color: var(--layout-text)">
+                            <i class="fas fa-table text-slate-400"></i> Detalhamento
+                        </h4>
+                        <span class="border px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 shadow-sm" style="background: var(--layout-card); border-color: var(--layout-border)" id="tableCount">0</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="border-b text-[9px] uppercase font-black text-slate-500 tracking-wider" style="background: var(--layout-accent); border-color: var(--layout-border)">
+                                <tr>
+                                    <th class="px-6 py-4">Processo (CNJ)</th>
+                                    <th class="px-6 py-4">Partes</th>
+                                    <th class="px-6 py-4">Pedidos / Objetos</th>
+                                    <th class="px-6 py-4">Filial</th>
+                                    <th class="px-6 py-4 text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable" class="divide-y text-xs" style="--tw-divide-opacity: 1; divide-color: var(--layout-border); color: var(--layout-text)"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="mapModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-6 modal-overlay"></div>
+
+    <div id="detailModal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4 modal-overlay" onclick="closeDetail()">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-100 flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+            <div class="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+                <h3 class="font-bold text-slate-800 flex items-center gap-3 text-lg"><span id="detTitle">Ficha do Processo</span></h3>
+                <button onclick="closeDetail()" class="text-slate-400 hover:text-rose-500 text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="detBody" class="p-8 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 overflow-y-auto text-slate-700"></div>
+        </div>
+    </div>
+
+    <script>
+        const LEXOPS_LOGO_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 90'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%235b21b6;stop-opacity:1'/%3E%3Cstop offset='50%25' style='stop-color:%237c3aed;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%23a855f7;stop-opacity:1'/%3E%3C/linearGradient%3E%3Cfilter id='shadow'%3E%3CfeDropShadow dx='0' dy='4' stdDeviation='8' flood-opacity='0.4'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='320' height='90' fill='url(%23g1)' rx='12'/%3E%3Cg filter='url(%23shadow)'%3E%3Ctext x='160' y='48' font-family='Inter,Arial,sans-serif' font-size='38' font-weight='900' fill='white' text-anchor='middle' letter-spacing='3'%3ELexOps%3C/text%3E%3Ctext x='160' y='72' font-family='Inter,Arial,sans-serif' font-size='13' font-weight='700' fill='rgba(255,255,255,0.85)' text-anchor='middle' letter-spacing='5'%3EINSIGHT%3C/text%3E%3C/g%3E%3C/svg%3E";
+
+        // *** DADOS FIXOS DA DEMO ***
+        const DEMO_DATA = [
+            { Cliente: "Grupo Horizonte S.A.", CNPJ: "12.345.678/0001-00", CNJ: "0002001-11.2023.5.02.0001", "Área": "Trabalhista", Filial: "SP", "Parte Contrária": "João Silva", Objeto: "Horas Extras; Reflexos", Valor: 45000, Risco: "Provável", Status: "Ativo", "SLA (dias)": 12, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Grupo Horizonte S.A.", CNPJ: "12.345.678/0001-00", CNJ: "0002002-22.2022.5.02.0001", "Área": "Trabalhista", Filial: "PR", "Parte Contrária": "Carlos Lima", Objeto: "Adicional Insalubridade", Valor: 38000, Risco: "Possível", Status: "Ativo", "SLA (dias)": 9, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Banco Solaris", CNPJ: "98.765.432/0001-99", CNJ: "0002003-33.2022.8.26.0100", "Área": "Cível", Filial: "SP", "Parte Contrária": "Maria Santos", Objeto: "Danos Morais", Valor: 22000, Risco: "Possível", Status: "Ativo", "SLA (dias)": 8, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Banco Solaris", CNPJ: "98.765.432/0001-99", CNJ: "0002004-44.2021.8.26.0100", "Área": "Cível", Filial: "PR", "Parte Contrária": "Rafael Gomes", Objeto: "Juros Abusivos", Valor: 18000, Risco: "Remoto", Status: "Ativo", "SLA (dias)": 15, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Indústria Atlas Brasil", CNPJ: "11.222.333/0001-44", CNJ: "0002005-55.2023.8.16.0001", "Área": "Cível", Filial: "PR", "Parte Contrária": "Construtora Alfa", Objeto: "Quebra Contratual", Valor: 180000, Risco: "Provável", Status: "Ativo", "SLA (dias)": 20, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Indústria Atlas Brasil", CNPJ: "11.222.333/0001-44", CNJ: "0002006-66.2022.8.16.0001", "Área": "Ambiental", Filial: "PR", "Parte Contrária": "IBAMA", Objeto: "Auto de Infração Ambiental", Valor: 320000, Risco: "Provável", Status: "Ativo", "SLA (dias)": 30, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Grupo Horizonte S.A.", CNPJ: "12.345.678/0001-00", CNJ: "0002007-77.2021.5.09.0025", "Área": "Trabalhista", Filial: "PR", "Parte Contrária": "Ana Paula", Objeto: "Assédio Moral", Valor: 120000, Risco: "Provável", Status: "Ativo", "SLA (dias)": 18, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Grupo Horizonte S.A.", CNPJ: "12.345.678/0001-00", CNJ: "0002008-88.2020.5.09.0030", "Área": "Trabalhista", Filial: "PR", "Parte Contrária": "Paulo Rocha", Objeto: "Equiparação Salarial", Valor: 54000, Risco: "Possível", Status: "Ativo", "SLA (dias)": 22, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Banco Solaris", CNPJ: "98.765.432/0001-99", CNJ: "0002009-99.2023.8.26.0100", "Área": "Cível", Filial: "SP", "Parte Contrária": "Luciana Prado", Objeto: "Negativação Indevida", Valor: 15000, Risco: "Provável", Status: "Ativo", "SLA (dias)": 7, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Indústria Atlas Brasil", CNPJ: "11.222.333/0001-44", CNJ: "0002010-00.2021.8.16.0001", "Área": "Ambiental", Filial: "PR", "Parte Contrária": "Instituto Ambiental", Objeto: "Licenciamento Ambiental", Valor: 95000, Risco: "Possível", Status: "Ativo", "SLA (dias)": 25, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Grupo Horizonte S.A.", CNPJ: "12.345.678/0001-00", CNJ: "0002011-12.2022.5.09.0001", "Área": "Trabalhista", Filial: "SP", "Parte Contrária": "Marcos Teixeira", Objeto: "Adicional Periculosidade", Valor: 41000, Risco: "Possível", Status: "Ativo", "SLA (dias)": 10, Escritório: "Almeida & Torres Advogados" },
+            { Cliente: "Banco Solaris", CNPJ: "98.765.432/0001-99", CNJ: "0002012-23.2020.8.26.0100", "Área": "Cível", Filial: "SP", "Parte Contrária": "Fernando Alves", Objeto: "Danos Morais", Valor: 27000, Risco: "Possível", Status: "Encerrado", "SLA (dias)": 5, Escritório: "Almeida & Torres Advogados" }
+        ];
+
+        var dStore = []; 
+        var customCharts = [];
+        var colMapping = {};
+        var filterState = {}; 
+        var activeChartFilters = {};
+        var logoData = { office: null, client: null, lexops: LEXOPS_LOGO_URL };
+        var themeConfig = { brand: '#4f46e5', paletteName: 'indigo', palette: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'] };
+        var layoutTheme = 'minimal';
+        var chartInstances = {};
+        var rawHeaders = [];
+        var numericColumns = ['Valor'];
+        var mappedValueColumn = 'Valor';
+
+        const PALETTES = {
+            indigo: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'],
+            ocean: ['#0891b2', '#06b6d4', '#22d3ee', '#67e8f9', '#a5f3fc'],
+            sunset: ['#ea580c', '#f97316', '#fb923c', '#fdba74', '#fed7aa'],
+            forest: ['#0f766e', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4'],
+            night: ['#3b0764', '#581c87', '#7e22ce', '#a855f7', '#d8b4fe'],
+            rose: ['#be123c', '#e11d48', '#f43f5e', '#fb7185', '#fda4af'],
+            gold: ['#92400e', '#b45309', '#d97706', '#f59e0b', '#fbbf24'],
+            slate: ['#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'],
+            emerald: ['#047857', '#059669', '#10b981', '#34d399', '#6ee7b7'],
+            crimson: ['#881337', '#9f1239', '#be123c', '#e11d48', '#f43f5e']
+        };
+
+        const LAYOUT_THEMES = {
+            minimal: { bg: '#F9FAFB', card: '#ffffff', text: '#111827', border: '#E5E7EB', accent: '#F3F4F6', sidebar: '#0f172a', sidebarText: '#f8fafc', sidebarBorder: '#1e293b' },
+            slate: { bg: '#F1F5F9', card: '#ffffff', text: '#0F172A', border: '#CBD5E1', accent: '#E2E8F0', sidebar: '#334155', sidebarText: '#f1f5f9', sidebarBorder: '#475569' },
+            midnight: { bg: '#0F172A', card: '#1E293B', text: '#F1F5F9', border: '#334155', accent: '#1E293B', sidebar: '#020617', sidebarText: '#e2e8f0', sidebarBorder: '#0f172a' },
+            cream: { bg: '#FEF3E2', card: '#FFFFFF', text: '#451a03', border: '#F3D5A7', accent: '#FDF8F0', sidebar: '#92400e', sidebarText: '#fef3e2', sidebarBorder: '#b45309' },
+            ocean: { bg: '#E0F2FE', card: '#FFFFFF', text: '#0C4A6E', border: '#7DD3FC', accent: '#F0F9FF', sidebar: '#0369a1', sidebarText: '#e0f2fe', sidebarBorder: '#0284c7' },
+            forest: { bg: '#DCFCE7', card: '#FFFFFF', text: '#14532D', border: '#86EFAC', accent: '#F0FDF4', sidebar: '#15803d', sidebarText: '#dcfce7', sidebarBorder: '#16a34a' },
+            lavender: { bg: '#F3E8FF', card: '#FFFFFF', text: '#581C87', border: '#D8B4FE', accent: '#FAF5FF', sidebar: '#7e22ce', sidebarText: '#f3e8ff', sidebarBorder: '#9333ea' },
+            ink: { bg: '#DBEAFE', card: '#FFFFFF', text: '#1E3A8A', border: '#93C5FD', accent: '#EFF6FF', sidebar: '#1e40af', sidebarText: '#dbeafe', sidebarBorder: '#2563eb' }
+        };
+
+        function b64DecodeUnicode(str) {
+            try {
+                return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) { console.error("Erro decode:", e); return "[]"; }
+        }
+
+        function b64EncodeUnicode(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+        }
+
+        function formatValue(val, colName) {
+            const lowerCol = (colName || '').toLowerCase();
+            if (lowerCol.includes('valor') || lowerCol.includes('montante') || lowerCol.includes('causa')) {
+                return fmtMoney(val);
+            }
+            if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+            if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+            return val.toFixed(0);
+        }
+
+        function parseVal(v) {
+            if(!v) return 0;
+            if(typeof v==='number') return v;
+            const s = String(v).replace(/[R$\s]/g,'');
+            if(s.includes(',') && s.lastIndexOf(',') > s.lastIndexOf('.')) return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;
+            return parseFloat(s.replace(/,/g,''))||0;
+        }
+
+        function fmtMoney(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+        function demoBlockAction(action) {
+            alert(`[MODO DEMO] A funcionalidade de ${action} está disponível apenas na versão licenciada do LexOpsInsight.\n\nContate o administrador para obter sua chave de acesso.`);
+        }
+
+        window.onload = function() {
+            setTimeout(() => {
+                applyLexOpsLogo();
+                initDemoMode();
+                document.getElementById('pageLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('pageLoader').remove(), 500);
+            }, 500);
+        };
+
+        function initDemoMode() {
+            // Populate headers and dStore directly from fixed DEMO_DATA
+            rawHeaders = Object.keys(DEMO_DATA[0]);
+            window._tempRaw = DEMO_DATA;
+            
+            // Hardcoded Logic to process dStore based on the provided CSV structure
+            dStore = DEMO_DATA.map(r => {
+                const objRaw = r['Objeto'];
+                let objList = ['N/D'];
+                if(objRaw) {
+                    const str = String(objRaw);
+                    if(str.includes(';')) {
+                        objList = str.split(';').map(s=>s.trim());
+                    } else {
+                        objList = [str.trim()];
+                    }
+                }
+                
+                return {
+                    Numero: r['CNJ'],
+                    Cliente: r['Cliente'],
+                    Filial: r['Filial'],
+                    Parte: r['Parte Contrária'],
+                    Valor: parseVal(r['Valor']),
+                    Area: r['Área'],
+                    Risco: r['Risco'],
+                    Objeto: objRaw,
+                    _objectsList: objList,
+                    _searchText: Object.values(r).join(' ').toLowerCase(),
+                    _allData: r 
+                };
+            });
+
+            // Set up Default Charts for the Demo
+            customCharts = [
+                { id: 'demo1', x: 'Area', y: 'sum', yCol: 'Valor', type: 'bar_h', title: 'Exposição Financeira por Área' },
+                { id: 'demo2', x: 'Risco', y: 'sum', yCol: 'Valor', type: 'doughnut', title: 'Distribuição de Valores por Risco' },
+                { id: 'demo3', x: 'Filial', y: 'sum', yCol: 'Valor', type: 'bar', title: 'Análise Financeira de Filiais' },
+                { id: 'demo4', x: 'Risco', y: 'count', yCol: null, type: 'line', title: 'Volume de Processos por Risco' }
+            ];
+
+            // Initialize UI
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('dashContent').classList.remove('hidden');
+            document.getElementById('clientControls').classList.remove('hidden');
+            document.getElementById('clientControls').classList.add('flex');
+            
+            populateChartBuilder();
+            initFiltersUI();
+            renderAll();
+        }
+
+        function applyLexOpsLogo() {
+            const img = document.getElementById('lexopsLogoImg');
+            const fallback = document.getElementById('lexopsLogoFallback');
+            
+            if(logoData.lexops) {
+                if(img) {
+                    img.src = logoData.lexops;
+                    img.classList.remove('hidden');
+                }
+                if(fallback) fallback.classList.add('hidden');
+            } else {
+                if(img) img.classList.add('hidden');
+                if(fallback) fallback.classList.remove('hidden');
+            }
+        }
+
+        ['logoOffice', 'logoClient'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('change', e => {
+                    const r = new FileReader();
+                    r.onload = ev => { 
+                        if(id.includes('Office')) logoData.office = ev.target.result; 
+                        else logoData.client = ev.target.result;
+                        applyLogos(); 
+                    };
+                    if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
+                });
+            }
+        });
+
+        function applyLogos() {
+            if(logoData.office) { 
+                const img = document.getElementById('imgOffice'); 
+                if(img) { 
+                    img.src = logoData.office; 
+                    img.classList.remove('hidden'); 
+                    document.getElementById('phOffice').classList.add('hidden'); 
+                }
+            }
+            if(logoData.client) { 
+                const img = document.getElementById('imgClient'); 
+                if(img) { 
+                    img.src = logoData.client; 
+                    img.classList.remove('hidden'); 
+                    document.getElementById('phClient').classList.add('hidden'); 
+                }
+            }
+        }
+
+        function populateChartBuilder() {
+            const biX = document.getElementById('biX');
+            const biYCol = document.getElementById('biYCol');
+            
+            if(!biX || !biYCol) return;
+
+            const categoricalCols = ['Area', 'Risco', 'Filial', 'Cliente', 'Parte', 'Objeto'];
+            biX.innerHTML = categoricalCols.map(col => `<option value="${col}">${col}</option>`).join('');
+            
+            if(rawHeaders.length > 0) {
+                rawHeaders.forEach(h => {
+                    if(!categoricalCols.includes(h) && !numericColumns.includes(h)) {
+                        biX.innerHTML += `<option value="${h}">${h}</option>`;
+                    }
+                });
+            }
+
+            biYCol.innerHTML = '';
+            numericColumns.forEach(col => {
+                biYCol.innerHTML += `<option value="${col}">${col}</option>`;
+            });
+        }
+
+        function initFiltersUI() {
+            const ca = document.getElementById('filtersContainer');
+            const cc = document.getElementById('clientFilters'); 
+            
+            if(ca) ca.innerHTML = '';
+            if(cc) cc.innerHTML = '';
+
+            if(!dStore || dStore.length === 0) return;
+
+            document.addEventListener('click', function(e) {
+                if(!e.target.closest('.filter-group-btn')) {
+                    document.querySelectorAll('.filter-dropdown').forEach(el => el.classList.add('hidden'));
+                }
+            });
+
+            ['Cliente','Filial','Area','Risco','Objeto'].forEach(dim => {
+                let vals = [];
+                if(dim==='Objeto') vals = [...new Set(dStore.flatMap(d=>d._objectsList))].sort();
+                else vals = [...new Set(dStore.map(d=>d[dim]))].sort();
+
+                if(vals.length > 0) {
+                    if(ca) {
+                        let htmlA = `<div class="mb-5 border-b pb-3" style="border-color: var(--layout-sidebar-border)"><p class="text-[9px] font-black uppercase mb-2 flex justify-between admin-section-title">${dim} <span class="px-1.5 rounded-full" style="background: rgba(0,0,0,0.2); color: var(--layout-sidebar-text)">${vals.length}</span></p>`;
+                        vals.forEach(v => {
+                            const b64Val = b64EncodeUnicode(v);
+                            const safeID = `chk_adm_${dim}_${b64Val.replace(/[^a-zA-Z0-9]/g,'')}`;
+                            htmlA += `<label class="flex items-center gap-2 mb-1.5 cursor-pointer hover:bg-white/10 p-1 rounded transition-colors"><input type="checkbox" id="${safeID}" onchange="toggleF('${dim}', '${b64Val}')" class="rounded admin-checkbox focus:ring-0 w-3.5 h-3.5" style="color: var(--brand-500)"><span class="text-xs truncate admin-section-title" title="${v}">${v}</span></label>`;
+                        });
+                        ca.innerHTML += htmlA + `</div>`;
+                    }
+                    
+                    if(cc) {
+                        let htmlC = `
+                        <div class="relative filter-group-btn">
+                            <button onclick="toggleDropdown('dd_${dim}')" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold hover:border-brand-500 transition-all shadow-sm" style="background: var(--layout-accent); border: 1px solid var(--layout-border); color: var(--layout-text)">
+                                ${dim} <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                            </button>
+                            <div id="dd_${dim}" class="filter-dropdown absolute top-full left-0 mt-2 w-64 rounded-xl shadow-xl border hidden max-h-80 overflow-y-auto p-2 z-50" style="background: var(--layout-card); border-color: var(--layout-border)">`;
+                        
+                        vals.forEach(v => {
+                            const b64Val = b64EncodeUnicode(v);
+                            const safeID = `chk_cli_${dim}_${b64Val.replace(/[^a-zA-Z0-9]/g,'')}`;
+                            htmlC += `<label class="flex items-center gap-2 p-2 cursor-pointer rounded-lg transition-colors hover:bg-opacity-10" style="hover:background: var(--layout-accent)"><input type="checkbox" id="${safeID}" onchange="toggleF('${dim}', '${b64Val}')" class="rounded focus:ring-0 w-3.5 h-3.5" style="border-color: var(--layout-border); color: var(--brand-500)"><span class="text-xs truncate leading-tight" style="color: var(--layout-text)">${v}</span></label>`;
+                        });
+                        cc.innerHTML += htmlC + `</div></div>`;
+                    }
+                }
+            });
+        }
+
+        function toggleDropdown(id) {
+            document.querySelectorAll('.filter-dropdown').forEach(el => {
+                if(el.id !== id) el.classList.add('hidden');
+            });
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function toggleF(dim, b64Val) {
+            const val = b64DecodeUnicode(b64Val);
+            if(!filterState[dim]) filterState[dim]=[];
+            const i = filterState[dim].indexOf(val);
+            if(i>-1) filterState[dim].splice(i,1); else filterState[dim].push(val);
+            
+            const safeSuffix = `${dim}_${b64Val.replace(/[^a-zA-Z0-9]/g,'')}`;
+            const chkAdm = document.getElementById(`chk_adm_${safeSuffix}`);
+            const chkCli = document.getElementById(`chk_cli_${safeSuffix}`);
+            const isChecked = (i === -1);
+            if(chkAdm) chkAdm.checked = isChecked;
+            if(chkCli) chkCli.checked = isChecked;
+
+            renderAll();
+        }
+
+        function resetFilters() { 
+            filterState = {}; 
+            activeChartFilters = {}; 
+            document.querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=false); 
+            const search = document.getElementById('globalSearch');
+            if(search) search.value = '';
+            renderAll(); 
+        }
+
+        function resetLayout() {
+            themeConfig = { brand: '#4f46e5', paletteName: 'indigo', palette: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'] };
+            layoutTheme = 'minimal';
+            // Reset to demo default
+            customCharts = [
+                { id: 'demo1', x: 'Area', y: 'sum', yCol: 'Valor', type: 'bar_h', title: 'Exposição Financeira por Área' },
+                { id: 'demo2', x: 'Risco', y: 'sum', yCol: 'Valor', type: 'doughnut', title: 'Distribuição de Valores por Risco' },
+                { id: 'demo3', x: 'Filial', y: 'sum', yCol: 'Valor', type: 'bar', title: 'Análise Financeira de Filiais' },
+                { id: 'demo4', x: 'Risco', y: 'count', yCol: null, type: 'line', title: 'Volume de Processos por Risco' }
+            ];
+            const paletteSelect = document.getElementById('paletteSelect');
+            if(paletteSelect) paletteSelect.value = 'indigo';
+            const layoutSelect = document.getElementById('layoutThemeSelect');
+            if(layoutSelect) layoutSelect.value = 'minimal';
+            applyTheme();
+            applyLayoutTheme();
+            renderAll();
+        }
+
+        function renderAll() {
+            const q = (document.getElementById('globalSearch') || {value: ''}).value.toLowerCase();
+            const filtered = dStore.filter(d => {
+                if(q && !d._searchText.includes(q)) return false;
+                for(const dim in filterState) {
+                    if(filterState[dim] && filterState[dim].length) {
+                        if(dim==='Objeto') { 
+                            if(!d._objectsList.some(o=>filterState[dim].includes(o))) return false; 
+                        }
+                        else { 
+                            if(!filterState[dim].includes(d[dim])) return false; 
+                        }
+                    }
+                }
+                for(const dim in activeChartFilters) {
+                    const activeVal = activeChartFilters[dim];
+                    if(activeVal) {
+                        if(dim==='Objeto') { 
+                            if(!d._objectsList.includes(activeVal)) return false; 
+                        }
+                        else if(Object.keys(d._allData).includes(dim)) { 
+                            if(d._allData[dim] !== activeVal) return false; 
+                        } 
+                        else { 
+                            if(d[dim] !== activeVal) return false; 
+                        }
+                    }
+                }
+                return true;
+            });
+
+            const sum = filtered.reduce((a,b)=>a+b.Valor,0);
+            const prov = filtered.filter(d=>String(d.Risco).toLowerCase().includes('prov')).reduce((a,b)=>a+b.Valor,0);
+            document.getElementById('kTotal').innerText = filtered.length;
+            document.getElementById('kTotalVal').innerText = fmtMoney(sum);
+            document.getElementById('kRiskProv').innerText = fmtMoney(prov);
+            document.getElementById('kAvg').innerText = fmtMoney(filtered.length?sum/filtered.length:0);
+            document.getElementById('tableCount').innerText = `${filtered.length} processos`;
+
+            const grid = document.getElementById('chartsGrid'); 
+            grid.innerHTML = ''; 
+            
+            customCharts.forEach(cfg => {
+                const wrap = document.createElement('div');
+                wrap.className = "glass p-6 rounded-2xl flex flex-col h-80 card break-inside-avoid relative group";
+                
+                let resetBtn = '';
+                if(activeChartFilters[cfg.x]) {
+                    wrap.classList.add('ring-2', 'ring-brand-500');
+                    resetBtn = `<button onclick="clearChartFilter('${cfg.x}')" class="absolute top-4 right-12 text-[9px] bg-brand-500 text-white px-2 py-1 rounded shadow animate-pulse">Limpar Filtro</button>`;
+                }
+
+                let note = cfg.x==='Objeto' ? '<p class="text-[9px] mt-2 italic text-center border-t pt-2" style="border-color: var(--layout-border); color: #9CA3AF">* Top Ocorrências + Agrupamento \"Outros\"</p>' : '';
+                
+                wrap.innerHTML = `${resetBtn}<div class="flex justify-between items-center mb-4 no-print"><h4 class="font-black text-xs uppercase tracking-wide" style="color: var(--layout-text)">${cfg.title}</h4><button onclick="removeChart('${cfg.id}')" class="text-slate-300 hover:text-rose-500 transition-colors"><i class="fas fa-trash"></i></button></div><div class="flex-1 min-h-0 relative"><canvas id="canv_${cfg.id}"></canvas></div>${note}`;
+                grid.appendChild(wrap);
+
+                const agg = {};
+                
+                if(cfg.x === 'Objeto') {
+                    filtered.forEach(d => {
+                        d._objectsList.forEach(obj => {
+                            if(!agg[obj]) agg[obj] = [];
+                            if(cfg.y === 'count') {
+                                if(!agg[obj].includes(d.Numero)) agg[obj].push(d.Numero);
+                            } else {
+                                let rawVal = d._allData[cfg.yCol || mappedValueColumn] || d.Valor;
+                                if(typeof rawVal !== 'number') rawVal = parseVal(rawVal);
+                                const dividedVal = rawVal / d._objectsList.length;
+                                agg[obj].push(dividedVal);
+                            }
+                        });
+                    });
+                } else {
+                    filtered.forEach(d => {
+                        let keys = [];
+                        if(d[cfg.x]) keys = [d[cfg.x]];
+                        else keys = [d._allData[cfg.x] || 'N/D'];
+
+                        keys.forEach(k => {
+                            if(!agg[k]) agg[k] = [];
+                            if(cfg.y === 'count') {
+                                agg[k].push(1);
+                            } else {
+                                let rawVal = d._allData[cfg.yCol || mappedValueColumn] || d.Valor;
+                                if(typeof rawVal !== 'number') rawVal = parseVal(rawVal);
+                                agg[k].push(rawVal);
+                            }
+                        });
+                    });
+                }
+
+                let sortedData = Object.entries(agg).map(([k,v]) => {
+                    let res = 0;
+                    if(cfg.y === 'count') {
+                        res = cfg.x === 'Objeto' ? v.length : v.reduce((a,b)=>a+b,0);
+                    } else if(cfg.y === 'sum') {
+                        res = v.reduce((a,b)=>a+b,0);
+                    } else {
+                        res = v.reduce((a,b)=>a+b,0) / v.length;
+                    }
+                    return [k, res];
+                }).sort((a,b)=>b[1]-a[1]);
+
+                let finalData = sortedData;
+                let bgColors = [];
+                const limit = cfg.type === 'line' ? 12 : (['bar_h', 'bar'].includes(cfg.type) ? 8 : 9);
+
+                if (sortedData.length > limit) {
+                    const topN = sortedData.slice(0, limit);
+                    const others = sortedData.slice(limit).reduce((acc, curr) => acc + curr[1], 0);
+                    finalData = topN;
+                    if (others > 0) finalData.push(['Outros', others]);
+                    bgColors = chroma.scale(themeConfig.palette).colors(finalData.length - (others>0?1:0));
+                    if(others>0) bgColors.push('#cbd5e1'); 
+                } else {
+                    bgColors = chroma.scale(themeConfig.palette).colors(Math.max(finalData.length,2));
+                }
+
+                const chartConfig = {
+                    type: cfg.type.replace('_h',''),
+                    data: {
+                        labels: finalData.map(d=>d[0]),
+                        datasets: [{ 
+                            data: finalData.map(d=>d[1]), 
+                            backgroundColor: cfg.type === 'line' ? 'rgba(79, 70, 229, 0.1)' : bgColors,
+                            borderColor: cfg.type === 'line' ? themeConfig.brand : 'transparent',
+                            borderWidth: cfg.type === 'line' ? 3 : 0,
+                            fill: cfg.type === 'line',
+                            tension: cfg.type === 'line' ? 0.4 : 0,
+                            pointRadius: cfg.type === 'line' ? 4 : 0,
+                            pointHoverRadius: cfg.type === 'line' ? 6 : 0,
+                            pointBackgroundColor: cfg.type === 'line' ? themeConfig.brand : 'transparent',
+                            borderRadius: ['bar', 'bar_h'].includes(cfg.type) ? 6 : 0
+                        }]
+                    },
+                    options: { 
+                        indexAxis: cfg.type==='bar_h'?'y':'x', 
+                        maintainAspectRatio: false, 
+                        responsive: true, 
+                        plugins: { 
+                            legend: { 
+                                display: ['doughnut', 'pie', 'polarArea'].includes(cfg.type), 
+                                position:'right', 
+                                labels: { 
+                                    boxWidth: 12, 
+                                    font: {size: 11, weight: 600},
+                                    padding: 10,
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        if (data.labels.length && data.datasets.length) {
+                                            return data.labels.map((label, i) => {
+                                                const value = data.datasets[0].data[i];
+                                                const formatted = cfg.y === 'count' ? value : formatValue(value, cfg.yCol || mappedValueColumn);
+                                                return {
+                                                    text: `${label}: ${formatted}`,
+                                                    fillStyle: data.datasets[0].backgroundColor[i] || data.datasets[0].backgroundColor,
+                                                    hidden: false,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                        return [];
+                                    }
+                                } 
+                            },
+                            tooltip: { 
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 13, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 12,
+                                callbacks: { 
+                                    label: (c) => {
+                                        if(cfg.y === 'count') return `Quantidade: ${c.raw}`;
+                                        return `Valor: ${formatValue(c.raw, cfg.yCol || mappedValueColumn)}`;
+                                    } 
+                                } 
+                            },
+                        },
+                        scales: {}
+                    }
+                };
+
+                if(!['doughnut', 'pie', 'polarArea', 'radar'].includes(cfg.type)) {
+                    chartConfig.options.scales.y = {
+                        display: true,
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 10, weight: 500 },
+                            color: '#9CA3AF',
+                            padding: 8,
+                            autoSkip: true,
+                            maxTicksLimit: cfg.type === 'bar_h' ? 10 : 6,
+                            callback: function(val) {
+                                if (cfg.type === 'bar_h') {
+                                    let label = this.getLabelForValue(val);
+                                    return label.length > 25 ? label.substr(0, 25) + '...' : label;
+                                }
+                                if(cfg.y === 'count') return val;
+                                return formatValue(val, cfg.yCol || mappedValueColumn);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(229, 231, 235, 0.5)',
+                            drawBorder: false
+                        }
+                    };
+                    
+                    chartConfig.options.scales.x = {
+                        display: true,
+                        ticks: {
+                            font: { size: 10, weight: 500 },
+                            color: '#9CA3AF',
+                            padding: 8,
+                            maxRotation: 45,
+                            minRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10,
+                            callback: function(val) {
+                                if (cfg.type === 'bar_h') {
+                                    if(cfg.y === 'count') return val;
+                                    return formatValue(val, cfg.yCol || mappedValueColumn);
+                                }
+                                let label = this.getLabelForValue(val);
+                                return label.length > 15 ? label.substr(0, 15) + '...' : label;
+                            }
+                        },
+                        grid: {
+                            display: cfg.type === 'bar_h' || cfg.type === 'line',
+                            color: 'rgba(229, 231, 235, 0.3)',
+                            drawBorder: false
+                        }
+                    };
+                }
+
+                if(cfg.type === 'radar') {
+                    chartConfig.options.scales = {
+                        r: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { size: 10 },
+                                backdropColor: 'transparent',
+                                callback: function(val) {
+                                    if(cfg.y === 'count') return val;
+                                    return formatValue(val, cfg.yCol || mappedValueColumn);
+                                }
+                            },
+                            grid: { color: 'rgba(229, 231, 235, 0.5)' },
+                            angleLines: { color: 'rgba(229, 231, 235, 0.5)' }
+                        }
+                    };
+                }
+
+                chartConfig.options.onClick = (e, els) => {
+                    if(els.length > 0) {
+                        const i = els[0].index;
+                        const label = finalData[i][0];
+                        if(label !== 'Outros') { 
+                            activeChartFilters[cfg.x] = label; 
+                            renderAll(); 
+                        }
+                    }
+                };
+
+                chartConfig.options.onHover = (e, els) => e.native.target.style.cursor = els.length ? 'pointer' : 'default';
+
+                new Chart(document.getElementById(`canv_${cfg.id}`), chartConfig);
+            });
+
+            document.getElementById('dataTable').innerHTML = filtered.slice(0,50).map((d,i) => `<tr class="cursor-pointer border-b last:border-0 transition-colors" style="border-color: var(--layout-border)" onclick="openDetail(${i})">
+                    <td class="px-6 py-4 font-bold font-mono text-[11px] whitespace-nowrap" style="color: var(--layout-text)">${d.Numero}</td>
+                    <td class="px-6 py-4"><div class="font-bold text-xs" style="color: var(--layout-text)">${d.Cliente}</div><div class="text-slate-400 text-[10px] mt-0.5">vs ${d.Parte}</div></td>
+                    <td class="px-6 py-4"><div class="line-clamp-2 text-xs w-48" style="color: var(--layout-text)" title="${d.Objeto}">${d.Objeto}</div></td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[10px] font-medium" style="background: var(--layout-accent); color: var(--layout-text)">${d.Filial}</span></td>
+                    <td class="px-6 py-4 text-right font-black text-xs" style="color: var(--layout-text)">${fmtMoney(d.Valor)}</td>
+                </tr>`).join('');
+            
+            window._renderedData = filtered;
+        }
+
+        function clearChartFilter(dim) { delete activeChartFilters[dim]; renderAll(); }
+        function toggleYCol() { document.getElementById('biYColDiv').classList.toggle('hidden', document.getElementById('biY').value==='count'); }
+        
+        function addChart() {
+            const xVal = document.getElementById('biX').value;
+            const yVal = document.getElementById('biY').value;
+            const yColVal = yVal === 'count' ? null : (document.getElementById('biYCol').value || mappedValueColumn);
+            const typeVal = document.getElementById('biType').value;
+            const titleVal = document.getElementById('biTitle').value || `Análise de ${xVal}`;
+            customCharts.push({ id: 'c'+Date.now(), x: xVal, y: yVal, yCol: yColVal, type: typeVal, title: titleVal }); 
+            document.getElementById('biTitle').value = '';
+            renderAll(); 
+        }
+        
+        function removeChart(id) { 
+            const chart = customCharts.find(c=>c.id===id);
+            if(chart) delete activeChartFilters[chart.x];
+            customCharts = customCharts.filter(c=>c.id!==id); 
+            renderAll(); 
+        }
+        
+        function updatePalette(n) { 
+            themeConfig.paletteName = n; 
+            themeConfig.palette = PALETTES[n]; 
+            themeConfig.brand = PALETTES[n][0]; 
+            applyTheme(); 
+            renderAll(); 
+        }
+        
+        function updateCustomColor(h) { 
+            themeConfig.paletteName='custom'; 
+            themeConfig.brand=h; 
+            themeConfig.palette=chroma.scale([h,'#cbd5e1']).colors(5); 
+            applyTheme(); 
+            renderAll(); 
+        }
+        
+        function applyTheme() { 
+            document.documentElement.style.setProperty('--brand-500', themeConfig.brand); 
+            document.documentElement.style.setProperty('--brand-600', chroma(themeConfig.brand).darken().hex()); 
+        }
+
+        function updateLayoutTheme(theme) {
+            layoutTheme = theme;
+            applyLayoutTheme();
+        }
+
+        function applyLayoutTheme() {
+            const t = LAYOUT_THEMES[layoutTheme] || LAYOUT_THEMES.minimal;
+            document.documentElement.style.setProperty('--layout-bg', t.bg);
+            document.documentElement.style.setProperty('--layout-card', t.card);
+            document.documentElement.style.setProperty('--layout-text', t.text);
+            document.documentElement.style.setProperty('--layout-border', t.border);
+            document.documentElement.style.setProperty('--layout-accent', t.accent);
+            document.documentElement.style.setProperty('--layout-sidebar', t.sidebar);
+            document.documentElement.style.setProperty('--layout-sidebar-text', t.sidebarText);
+            document.documentElement.style.setProperty('--layout-sidebar-border', t.sidebarBorder);
+            
+            const select = document.getElementById('layoutThemeSelect');
+            if(select) select.value = layoutTheme;
+        }
+        
+        function openDetail(i) {
+            const data = window._renderedData[i];
+            const body = document.getElementById('detBody'); body.innerHTML = '';
+            document.getElementById('detTitle').innerText = `Detalhes: ${data.Numero}`;
+            const core = {'Cliente':data.Cliente, 'Filial':data.Filial, 'Adverso':data.Parte, 'Valor':fmtMoney(data.Valor), 'Risco':data.Risco, 'Área':data.Area};
+            Object.entries(core).forEach(([k,v]) => body.innerHTML += `<div class="border-b border-slate-100 pb-2"><label class="text-[9px] font-black uppercase text-slate-400 block tracking-wider mb-1">${k}</label><span class="font-bold text-slate-800 text-sm">${v}</span></div>`);
+            if(data._objectsList.length) body.innerHTML += `<div class="col-span-1 md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2"><label class="text-[9px] font-bold text-indigo-500 uppercase block mb-2 tracking-wider">Pedidos Identificados</label><div class="flex flex-wrap gap-2">${data._objectsList.map(o=>`<span class="bg-white border border-slate-200 px-2 py-1 rounded text-xs text-slate-600 font-medium shadow-sm">${o}</span>`).join('')}</div></div>`;
+            body.innerHTML += `<div class="col-span-1 md:col-span-2 pt-6"><h4 class="text-xs font-bold text-slate-800 uppercase tracking-widest border-b pb-2 mb-4">Registro Completo (Dados Originais)</h4><div class="grid grid-cols-2 gap-4"></div></div>`;
+            const extraContainer = body.lastElementChild.lastElementChild;
+            Object.entries(data._allData).forEach(([k,v]) => extraContainer.innerHTML += `<div class="bg-slate-50 p-2 rounded border border-slate-100"><label class="text-[8px] font-bold uppercase text-slate-400 block mb-1 truncate" title="${k}">${k}</label><span class="text-[10px] text-slate-700 font-medium break-words">${v||'(vazio)'}</span></div>`);
+            document.getElementById('detailModal').classList.replace('hidden','flex');
+        }
+        
+        function closeDetail() { document.getElementById('detailModal').classList.replace('flex','hidden'); }
+
+        // EXPORT FUNCTIONS OVERRIDDEN FOR DEMO
+        function exportConsolidatedHTML() {
+            demoBlockAction('Exportação HTML');
+        }
+    </script>
 </body>
 </html>
