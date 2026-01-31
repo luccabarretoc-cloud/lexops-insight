@@ -6,46 +6,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    :root {
+      --bg-main: #0b1020;
+      --bg-header: rgba(15, 23, 42, 0.55);
+      --border-soft: rgba(255, 255, 255, 0.08);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-soft: rgba(99,102,241,0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Inter, system-ui, Arial, sans-serif;
-      background: #020617;
-      color: #e5e7eb;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, #1e293b 0%, #020617 60%);
+      color: var(--text-main);
+      overflow: hidden;
     }
 
+    /* HEADER */
     header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 24px;
+      padding: 14px 28px;
+      background: var(--bg-header);
+      backdrop-filter: blur(18px) saturate(140%);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    /* LOGO */
+    .brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 20px 32px;
-      border-bottom: 1px solid #1e293b;
-      background: #020617;
+      gap: 12px;
     }
 
-    header img {
-      height: 42px;
+    .brand img {
+      height: 38px;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,.45));
+    }
+
+    .brand span {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: .02em;
+    }
+
+    /* CENTER META */
+    .meta {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: .03em;
+    }
+
+    .meta strong {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      gap: 8px;
     }
 
     nav button {
-      background: transparent;
-      border: 1px solid #334155;
-      color: #e5e7eb;
-      padding: 10px 14px;
-      margin-left: 8px;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 999px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: .02em;
+      transition: all .18s ease;
     }
 
     nav button:hover {
-      background: #1e293b;
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-1px);
     }
 
+    nav button.active {
+      background: linear-gradient(180deg, rgba(99,102,241,0.35), rgba(99,102,241,0.15));
+      border-color: rgba(99,102,241,0.55);
+      box-shadow: 0 0 0 1px var(--accent-soft) inset;
+    }
+
+    /* IFRAME */
     iframe {
       width: 100%;
-      height: calc(100vh - 82px);
+      height: calc(100vh - 70px);
       border: none;
-      background: #f9fafb;
+      display: block;
+      background: #ffffff;
+      box-shadow:
+        0 50px 140px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      header {
+        grid-template-columns: auto 1fr;
+        row-gap: 8px;
+      }
+
+      .meta {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -53,26 +134,40 @@
 <body>
 
 <header>
-  <!-- LOGO -->
-  <img src="/assets/img/logo-lexops.png" alt="LexOps Insight">
+  <!-- BRAND -->
+  <div class="brand">
+    <img src="/assets/img/logo-lexops.png" alt="LexOps Insight">
+    <span>Demo Version</span>
+  </div>
 
-  <!-- MENU -->
+  <!-- META -->
+  <div class="meta">
+    <strong>Powered by LexOps Insight</strong>
+  </div>
+
+  <!-- NAV -->
   <nav>
-    <button onclick="loadDemo('geral')">Geral</button>
-    <button onclick="loadDemo('executivo')">Executivo</button>
-    <button onclick="loadDemo('trabalhista')">Trabalhista</button>
-    <button onclick="loadDemo('multicliente')">Multicliente</button>
+    <button class="active" onclick="loadDemo('geral', this)">Geral</button>
+    <button onclick="loadDemo('executivo', this)">Executivo</button>
+    <button onclick="loadDemo('trabalhista', this)">Trabalhista</button>
+    <button onclick="loadDemo('multicliente', this)">Multicliente</button>
   </nav>
 </header>
 
-<!-- ÁREA DA DEMO -->
+<!-- DEMO -->
 <iframe id="demoFrame" src="/demo/geral.html"></iframe>
 
 <script>
-  function loadDemo(tipo) {
+  function loadDemo(tipo, btn) {
     document.getElementById('demoFrame').src = `/demo/${tipo}.html`;
+
+    document.querySelectorAll('nav button')
+      .forEach(b => b.classList.remove('active'));
+
+    if (btn) btn.classList.add('active');
   }
 </script>
 
 </body>
 </html>
+
