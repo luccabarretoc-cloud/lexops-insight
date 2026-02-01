@@ -42,6 +42,36 @@
         }
         
         body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; }
+
+        <style>html { display: none; }</style>
+
+        <script>
+  (async () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) {
+      document.body.innerHTML = "<h2>Acesso restrito</h2>";
+      return;
+    }
+
+    try {
+      const res = await fetch(`/.netlify/functions/validate-token?token=${token}`);
+      const result = await res.json();
+
+      if (!result.valid) {
+        document.body.innerHTML = "<h2>Acesso expirado ou inválido</h2>";
+        return;
+      }
+
+      // Token válido → app continua carregando
+      document.documentElement.style.display = "block";
+
+    } catch (e) {
+      document.body.innerHTML = "<h2>Erro de validação</h2>";
+    }
+  })();
+</script>
         
         .glass { 
             background: #FFFFFF; 

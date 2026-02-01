@@ -5,6 +5,28 @@
   <title>LexOps Insight | Demonstração</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  const res = await fetch(
+    `/.netlify/functions/validate-token?token=${token}`
+  );
+
+  const data = await res.json();
+
+  if (!data.allowed) {
+    document.body.innerHTML = `
+      <div style="font-family:Inter;padding:40px;text-align:center">
+        <h2>Acesso indisponível</h2>
+        <p>Seu acesso expirou ou é inválido.</p>
+      </div>
+    `;
+  }
+})();
+</script>
+
   <style>
     :root {
       --bg-main: #0b1020;
