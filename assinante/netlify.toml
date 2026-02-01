@@ -1,0 +1,3 @@
+[build]
+  publish = "assinante/app"
+  functions = "netlify/functions"
